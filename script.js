@@ -1,91 +1,34 @@
-console.clear();
+var contextClass = (window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.oAudioContext || window.msAudioContext);
+var dance = document.getElementById("everybodydance");
+if (contextClass) {
+  var context = new contextClass();
+} else {
+  onError;
+}
+var request = new XMLHttpRequest();
+request.open('GET', "https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/gonna-make-you-sweat.mp3", true);
+request.responseType = 'arraybuffer';
+request.onload = function() {
+ context.decodeAudioData(request.response, function(theBuffer) {
+  buffer = theBuffer;
+  }, onError);
+}
+request.send();
 
-// instigate our audio context
-audio_file.onchange = function(){
-    var files = this.files;
-    var file = URL.createObjectURL(files[0]); 
-                audio_player.src = file; 
-    audio_player.play();
-  };
+function onError() { console.log("Bad browser! No Web Audio API for you"); }
 
-// for cross browser
-const AudioContext = window.AudioContext || window.webkitAudioContext;
-const audioCtx = new AudioContext();
+function unpress() { dance.classList.remove("pressed"); }
 
-// load some sound
-const audioElement = document.querySelector('audio');
-const track = audioCtx.createMediaElementSource(audioElement);
-
-const playButton = document.querySelector('.play');
-
-// play pause audio
-playButton.addEventListener('click', function() {
-    console.log("clicked");
-    console.log(audioCtx.state);
-    
-	
-	// check if context is in suspended state (autoplay policy)
-	if (audioCtx.state === 'suspended') {
-        audioCtx.resume().then(function() {
-        console.log(audioCtx.state);
-        })
-	}
-	audioElement.play();
-	if (this.dataset.playing === 'false') {
-		audioElement.play();
-		this.dataset.playing = 'true';
-	// if track is playing pause it
-	} else if (this.dataset.playing === 'true') {
-		audioElement.pause();
-		this.dataset.playing = 'false';
-	}
-	
-	let state = this.getAttribute('aria-checked') === "true" ? true : false;
-	this.setAttribute( 'aria-checked', state ? "false" : "true" );
-	
-}, false);
-
-// if track ends
-audioElement.addEventListener('ended', () => {
-	playButton.dataset.playing = 'false';
-	playButton.setAttribute( "aria-checked", "false" );
-}, false);
-
-// // volume
-// const gainNode = audioCtx.createGain();
-
-// const volumeControl = document.querySelector('[data-action="volume"]');
-// volumeControl.addEventListener('input', function() {
-// 	gainNode.gain.value = this.value;
-// }, false);
-
-// // // panning
-// const pannerOptions = {pan: 0};
-// const panner = new StereoPannerNode(audioCtx, pannerOptions);
-
-// const pannerControl = document.querySelector('[data-action="panner"]');
-// pannerControl.addEventListener('input', function() {
-// 	panner.pan.value = this.value;	
-// }, false);
-
-// connect our graph
-track.connect(audioCtx.destination);
-
-//  const powerButton = document.querySelector('.control-power');
-
-// powerButton.addEventListener('click', function() {
-// 	if (this.dataset.power === 'on') {
-// 		audioCtx.suspend();
-// 		this.dataset.power = 'off';
-// 	} else if (this.dataset.power === 'off') {
-// 		audioCtx.resume();
-// 		this.dataset.power = 'on';
-// 	}
-// 	this.setAttribute( "aria-checked", state ? "false" : "true" );
-// 	console.log(audioCtx.state);
-// }, false);
-
-// Track credit: Outfoxing the Fox by Kevin MacLeod under Creative Commons 
+function playSound() {
+ dance.classList.add("pressed");
+  var source = context.createBufferSource();
+  source.buffer = buffer;
+ source.connect(context.destination);
+  source.start(0);
+  var delay = 2000;
+  setTimeout(unpress,delay);
+}
+dance.addEventListener('click', function(event) { playSound(); });
 
 
 
