@@ -46,7 +46,7 @@
         // loop through the sounds we want to import
         for(let soundName of drumKitSoundNames) {
             // fetch them from the file system
-            fetch(soundName)
+            fetch("https://cors-anywhere.herokuapp.com/" + soundName)
                 // when we get the asynchronous response, convert to an ArrayBuffer
                 .then(response => response.arrayBuffer())
                 .then(buffer => {
