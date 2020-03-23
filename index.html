@@ -46,7 +46,7 @@
         // loop through the sounds we want to import
         for(let soundName of drumKitSoundNames) {
             // fetch them from the file system
-            fetch(soundName )
+            fetch(soundName)
                 // when we get the asynchronous response, convert to an ArrayBuffer
                 .then(response => response.arrayBuffer())
                 .then(buffer => {
@@ -59,6 +59,9 @@
         }
         let audioBufferSourceNode;
         const playDrums = (index) => {
+            //set up the loop
+            console.log(settings.loop);
+            
             // allow the user to play sound
             audioBufferSourceNodeContext.resume();
             if(audioBufferSourceNode) audioBufferSourceNode.stop();
