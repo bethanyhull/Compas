@@ -7,28 +7,102 @@
     <link rel="stylesheet" type="text/css" href="./styles.css">
 </head>
 <body>
-    <h1>Compas Test 1</h1>
-    <div class="twelve">
-        <div class="dot dot1" id="dot1"></div>
-        <div class="dot dot2" id="dot2"></div>
-        <div class="dot dot3" id="dot3"></div>
-        <div class="dot dot4" id="dot4"></div>
-        <div class="dot dot5" id="dot5"></div>
-        <div class="dot dot6" id="dot6"></div>
-        <div class="dot dot7" id="dot7"></div>
-        <div class="dot dot8" id="dot8"></div>
-        <div class="dot dot9" id="dot9"></div>
-        <div class="dot dot10" id="dot10"></div>
-        <div class="dot dot11" id="dot11"></div>
-        <div class="dot dot12" id="dot12"></div>
+    <div>
+        <button onclick="playDrums(0)">Hi-hat</button>
+        <button onclick="playDrums(1)">Kick</button>
+        <button onclick="playDrums(2)">Snare</button>
+        <button onclick="stop()">Stop</button>
     </div>
-
-    <div class="buttons">
-        <button data-playing="false" role="switch" aria-checked="false">
-            <span>Play/Pause</span>
-        </button>
+    <div>
+        Playback rate: <input type="range" min="-100" max="100" value="0" oninput="changePlaybackRate(value)">
     </div>
-    <audio src="http://bethanyhull.com/Compas/sounds/clap1.wav" type="audio/mpeg"></audio>
-    <script src="script.js"></script>
+    <div>
+        Detune: <input type="range" min="-100" max="100" value="0" oninput="changeDetune(value)">
+    </div>
+    <div>
+        <button onclick="toggleLoop()">Toggle Loop</button>
+    </div>
+    <div>
+        Loop start: <input type="range" min="0" max="100" value="0" oninput="changeLoopStart(value)">
+    </div>
+    <div>
+        Loop end: <input type="range" min="0" max="1000" value="0" oninput="changeLoopEnd(value)">
+    </div>
+    <script>
+        const audioBufferSourceNodeContext = new AudioContext()
+        const drumKitSoundNames = [
+            'clap1',
+            'clap2',
+            'clap3'
+        ];
+        const settings = {
+            detune: 0,
+            loop: false,
+            loopStart: 0,
+            loopEnd: 100,
+            playbackRate: 1
+        }
+        const drumKitBuffers = [];
+        // loop through the sounds we want to import
+        for(let soundName of drumKitSoundNames) {
+            // fetch them from the file system
+            fetch('/sounds/' + soundName + '.wav')
+                // when we get the asynchronous response, convert to an ArrayBuffer
+                .then(response => response.arrayBuffer())
+                .then(buffer => {
+                    // decode the ArrayBuffer as an AudioBuffer
+                    audioBufferSourceNodeContext.decodeAudioData(buffer, decoded => {
+                        // push the resulting sound to an array
+                        drumKitBuffers.push(decoded);
+                    });
+                });
+        }
+        let audioBufferSourceNode;
+        const playDrums = (index) => {
+            // allow the user to play sound
+            audioBufferSourceNodeContext.resume();
+            if(audioBufferSourceNode) audioBufferSourceNode.stop();
+            // create a new AudioBufferSourceNode
+            audioBufferSourceNode = audioBufferSourceNodeContext.createBufferSource();
+            // set the buffer to the appropriate index
+            audioBufferSourceNode.buffer = drumKitBuffers[index];
+            // connect the buffer node to the destination
+            audioBufferSourceNode.connect(audioBufferSourceNodeContext.destination);
+            // set the detune value
+            audioBufferSourceNode.detune.setValueAtTime(settings.detune, audioBufferSourceNodeContext.currentTime);
+            // set whether or not the node loops
+            audioBufferSourceNode.loop = settings.loop;
+            // set loop start and end
+            audioBufferSourceNode.loopStart = settings.loopStart;
+            audioBufferSourceNode.loopEnd = settings.loopEnd;
+            // set playback rate
+            audioBufferSourceNode.playbackRate.setValueAtTime(settings.playbackRate, audioBufferSourceNodeContext.currentTime);
+            // start playing the sound
+            audioBufferSourceNode.start();
+        }
+        const stop = () => {
+            if(audioBufferSourceNode) audioBufferSourceNode.stop();
+        }
+        const changePlaybackRate = (playbackRate) => {
+            settings.playbackRate = Math.pow(10, playbackRate / 100);
+            audioBufferSourceNode.playbackRate.setValueAtTime(settings.playbackRate, audioBufferSourceNodeContext.currentTime);
+        }
+        const changeDetune = (detune) => {
+            settings.detune = detune;
+            audioBufferSourceNode.detune.setValueAtTime(detune, audioBufferSourceNodeContext.currentTime);
+        }
+        const toggleLoop = () => {
+            settings.loop = !settings.loop;
+            audioBufferSourceNode.loop = settings.loop;
+        }
+        const changeLoopStart = (loopStart) => {
+            settings.loopStart = loopStart / 1000;
+            audioBufferSourceNode.loopStart = loopStart;
+        }
+        const changeLoopEnd = (loopEnd) => {
+            settings.loopEnd = loopEnd / 1000;
+            audioBufferSourceNode.loopEnd = loopEnd;
+        }
+    </script>
 </body>
 </html>

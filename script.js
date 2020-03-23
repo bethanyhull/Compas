@@ -1,48 +1,95 @@
-var audioContext;
-const track = null;
-const playButton = document.querySelector('button');
+console.clear();
+
+// instigate our audio context
+audio_file.onchange = function(){
+    var files = this.files;
+    var file = URL.createObjectURL(files[0]); 
+                audio_player.src = file; 
+    audio_player.play();
+  };
+
+// for cross browser
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioContext();
+
+// load some sound
 const audioElement = document.querySelector('audio');
+const track = audioCtx.createMediaElementSource(audioElement);
 
-window.addEventListener('load', init, false);
-function init() {
-  try {
-    // Fix up for prefixing
-    window.AudioContext = window.AudioContext||window.webkitAudioContext;
-    audioContext = new AudioContext();
+const playButton = document.querySelector('.play');
 
-
-// pass it into the audio context
-track = audioContext.createMediaElementSource(audioElement);
-audio.crossOrigin = "anonymous";
-track.connect(audioContext.destination);
-
-  }
-  catch(e) {
-    alert('Web Audio API is not supported in this browser');
-  }
-}
-
-
-
+// play pause audio
 playButton.addEventListener('click', function() {
-    audioContext.resume();
-console.log("I am active");
+    console.log("clicked");
+    console.log(audioCtx.state);
+    
+	
+	// check if context is in suspended state (autoplay policy)
+	if (audioCtx.state === 'suspended') {
+        audioCtx.resume().then(function() {
+        console.log(audioCtx.state);
+        })
+	}
+	audioElement.play();
+	if (this.dataset.playing === 'false') {
+		audioElement.play();
+		this.dataset.playing = 'true';
+	// if track is playing pause it
+	} else if (this.dataset.playing === 'true') {
+		audioElement.pause();
+		this.dataset.playing = 'false';
+	}
+	
+	let state = this.getAttribute('aria-checked') === "true" ? true : false;
+	this.setAttribute( 'aria-checked', state ? "false" : "true" );
+	
+}, false);
 
-    // check if context is in suspended state (autoplay policy)
-    if (audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
+// if track ends
+audioElement.addEventListener('ended', () => {
+	playButton.dataset.playing = 'false';
+	playButton.setAttribute( "aria-checked", "false" );
+}, false);
 
-    // play or pause track depending on state
-    if (this.dataset.playing === 'false') {
-        audioElement.play();
-        this.dataset.playing = 'true';
-    } else if (this.dataset.playing === 'true') {
-        audioElement.pause();
-        this.dataset.playing = 'false';
-    }
+// // volume
+// const gainNode = audioCtx.createGain();
 
-}
+// const volumeControl = document.querySelector('[data-action="volume"]');
+// volumeControl.addEventListener('input', function() {
+// 	gainNode.gain.value = this.value;
+// }, false);
 
-, false);
+// // // panning
+// const pannerOptions = {pan: 0};
+// const panner = new StereoPannerNode(audioCtx, pannerOptions);
+
+// const pannerControl = document.querySelector('[data-action="panner"]');
+// pannerControl.addEventListener('input', function() {
+// 	panner.pan.value = this.value;	
+// }, false);
+
+// connect our graph
+track.connect(audioCtx.destination);
+
+//  const powerButton = document.querySelector('.control-power');
+
+// powerButton.addEventListener('click', function() {
+// 	if (this.dataset.power === 'on') {
+// 		audioCtx.suspend();
+// 		this.dataset.power = 'off';
+// 	} else if (this.dataset.power === 'off') {
+// 		audioCtx.resume();
+// 		this.dataset.power = 'on';
+// 	}
+// 	this.setAttribute( "aria-checked", state ? "false" : "true" );
+// 	console.log(audioCtx.state);
+// }, false);
+
+// Track credit: Outfoxing the Fox by Kevin MacLeod under Creative Commons 
+
+
+
+
+
+
 
