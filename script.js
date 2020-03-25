@@ -1,3 +1,15 @@
+function Palo (name, about, counts, basicTempo, accents) {
+  this.name = name;
+  this.about = about;
+  this.counts = counts;
+  this.tempo = basicTempo;
+  this.accents = accents;
+}
+
+var bulerias = new Palo("Bulerias", "Party dance", 12, 234, [12, 3, 6, 8, 10])
+
+
+
 const ctx = new AudioContext();
 var analyser = ctx.createAnalyser();
 let audio1;
